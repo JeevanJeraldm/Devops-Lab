@@ -1,0 +1,153 @@
+Q4: Create a CI pipeline using GitHub Actions to build and push a Docker image of a Python app to Docker Hub
+
+---
+
+## STEP 1: Create Project Files (File Explorer / VS Code)
+
+Create a folder (e.g., Devops Ex4)
+
+Inside the folder create:
+
+* app.py
+* Dockerfile
+* requirements.txt
+
+---
+
+## STEP 2: Write Application Code (app.py)
+
+Open app.py and paste:
+
+from flask import Flask
+app = Flask(**name**)
+
+@app.route("/")
+def home():
+return "Hello Docker CI"
+
+if **name** == "**main**":
+app.run(host="0.0.0.0", port=5000)
+
+---
+
+## STEP 3: Create requirements.txt
+
+Add:
+flask
+
+---
+
+## STEP 4: Create Dockerfile
+
+Add:
+
+FROM python:3.9
+WORKDIR /app
+COPY . /app
+RUN pip install -r requirements.txt
+CMD ["python", "app.py"]
+
+---
+
+## STEP 5: Initialize Git (Terminal)
+
+Open terminal in project folder:
+
+cd "C:\Users\Jeevanjerald\Documents\Devops Ex4"
+git init
+
+---
+
+## STEP 6: Create GitHub Repository (Browser)
+
+Go to GitHub
+Create a new repository (e.g., Devops-Lab)
+
+---
+
+## STEP 7: Connect Local Repo to GitHub (Terminal)
+
+git remote add origin https://github.com/JeevanJeraldm/Devops-Lab.git
+git branch -M main
+
+---
+
+## STEP 8: Create Workflow File (VS Code / File Explorer)
+
+Create folder path:
+
+.github/workflows/
+
+Inside it create file:
+docker.yml
+
+---
+
+## STEP 9: Add Workflow Code (docker.yml)
+
+Paste:
+
+name: Docker CI
+
+on:
+push:
+branches: [ "main" ]
+
+jobs:
+build:
+runs-on: ubuntu-latest
+
+```
+steps:
+- name: Checkout Code
+  uses: actions/checkout@v3  
+
+- name: Login to Docker Hub
+  uses: docker/login-action@v2
+  with:
+    username: ${{ secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKER_PASSWORD }}  
+
+- name: Build Image
+  run: docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp .  
+
+- name: Push Image
+  run: docker push ${{ secrets.DOCKER_USERNAME }}/myapp  
+```
+
+---
+
+## STEP 10: Add Secrets (GitHub Website)
+
+Go to your repo → Settings → Secrets → Actions
+
+Add:
+
+* DOCKER_USERNAME = jeevanjeraldm
+* DOCKER_PASSWORD = your docker password or token
+
+---
+
+## STEP 11: Push Code (Terminal)
+
+git add .
+git commit -m "Added CI pipeline"
+git push -u origin main
+
+---
+
+## STEP 12: Verify Execution (GitHub)
+
+Go to repo → Actions tab
+Open "Docker CI" workflow
+Check build and push status
+
+---
+
+## Execution Summary:
+
+* Files created locally
+* Workflow added in .github/workflows
+* Secrets configured in GitHub
+* Push triggers CI pipeline
+* Docker image built and pushed automatically
