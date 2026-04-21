@@ -1,0 +1,175 @@
+Q7: Create a GitHub Actions pipeline to automatically build and push a Docker image of a Python app to Docker Hub
+
+Step 1: Create Project Folder (File Explorer / VS Code)
+
+Create a new folder in your system
+Example location:
+C:\Users\Jeevanjerald\Documents\Devops Ex7
+
+Open this folder in VS Code or File Explorer
+
+Step 2: Create Application File (app.py)
+
+Create a file named app.py and paste:
+
+from flask import Flask
+
+app = Flask(**name**)
+
+@app.route('/')
+def home():
+return "Docker CI/CD Pipeline Working!"
+
+if **name** == '**main**':
+app.run(host='0.0.0.0', port=5000)
+
+Step 3: Create requirements.txt
+Create a file named requirements.txt
+Add:
+flask
+
+Step 4: Create Dockerfile
+
+Create a file named Dockerfile
+
+Add:
+
+FROM python:3.10
+
+WORKDIR /app
+
+COPY . .
+
+RUN pip install -r requirements.txt
+
+CMD ["python", "app.py"]
+
+Step 5: Create GitHub Actions Workflow File
+
+Create folders:
+
+.github
+.github/workflows
+
+Inside workflows, create file:
+
+docker.yml
+
+Paste:
+
+name: Docker CI Pipeline
+
+on:
+push:
+branches: ["main"]
+
+jobs:
+build:
+runs-on: ubuntu-latest
+
+```
+steps:
+- name: Checkout Code
+  uses: actions/checkout@v3  
+
+- name: Login to Docker Hub
+  uses: docker/login-action@v2  
+  with:
+    username: ${{ secrets.DOCKER_USERNAME }}
+    password: ${{ secrets.DOCKER_TOKEN }}  
+
+- name: Build Docker Image
+  run: docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp .  
+
+- name: Push Docker Image
+  run: docker push ${{ secrets.DOCKER_USERNAME }}/myapp  
+```
+
+Step 6: Create Docker Hub Access Token (Browser)
+
+Open Docker Hub
+
+Login with your account
+
+Go to Account Settings → Security
+
+Click "New Access Token"
+
+Give name: github-actions
+
+Copy and save the token
+
+Step 7: Create GitHub Repository (Browser)
+
+Open GitHub
+
+Click "New Repository"
+
+Enter name (example: Devops-Lab)
+
+Do not initialize with README
+
+Click Create
+
+Step 8: Add Secrets in GitHub (Browser)
+
+Open your repository
+
+Go to Settings
+
+Click "Secrets and variables" → Actions
+
+Click "New repository secret"
+
+Add:
+
+DOCKER_USERNAME = jeevanjeraldm
+DOCKER_TOKEN = your_access_token
+
+Step 9: Push Code to GitHub (Terminal)
+
+Open terminal in your project folder
+
+cd "C:\Users\Jeevanjerald\Documents\Devops Ex7"
+
+git init
+git remote add origin https://github.com/JeevanJeraldm/Devops-Lab.git
+git branch -M main
+git add .
+git commit -m "Added Docker CI pipeline"
+git push -u origin main
+
+Step 10: Verify Execution (GitHub)
+
+Open your repository
+
+Click "Actions" tab
+
+Open "Docker CI Pipeline"
+
+Check if build is successful (green tick)
+
+Step 11: Verify in Docker Hub (Browser)
+
+Open Docker Hub
+
+Check your repository:
+
+https://hub.docker.com/r/jeevanjeraldm/myapp
+
+Step 12: Run Docker Image Locally (Terminal)
+
+docker pull jeevanjeraldm/myapp
+
+docker run -p 5000:5000 jeevanjeraldm/myapp
+
+Open browser:
+
+http://localhost:5000
+
+Execution Summary
+Code pushed to GitHub
+GitHub Actions triggered automatically
+Docker image built using Dockerfile
+Image pushed securely using access token
+Application can be run locally using Docker
