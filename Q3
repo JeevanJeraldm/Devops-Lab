@@ -1,0 +1,76 @@
+Q3: Develop and demonstrate a simple monolithic application model using Python (Flask)
+
+---
+
+## STEP 1: Create Project Folder (File Explorer)
+
+* Go to Desktop/Documents
+* Create a folder → Devops Ex3
+
+---
+
+## STEP 2: Create Python File (Inside Folder)
+
+* Open the folder
+* Right click → New → Text Document
+* Rename it to: app.py
+
+Paste this code:
+
+from flask import Flask
+
+app = Flask(**name**)
+
+@app.route("/")
+def home():
+return "Welcome to Monolithic App"
+
+@app.route("/about")
+def about():
+return "This is a simple monolithic application"
+
+if **name** == "**main**":
+app.run(debug=True)
+
+---
+
+## STEP 3: Open Terminal (PowerShell / Command Prompt)
+
+* Open PowerShell
+* Navigate to your folder:
+
+cd "C:\Users\Jeevanjerald\Documents\Devops Ex3"
+
+---
+
+## STEP 4: Install Flask (Run in Terminal)
+
+python -m pip install flask
+
+---
+
+## STEP 5: Run Application (Terminal)
+
+python app.py
+
+You will see:
+Running on http://127.0.0.1:5000/
+
+---
+
+## STEP 6: Open Browser (Chrome / Edge)
+
+Enter URLs:
+
+http://localhost:5000
+http://localhost:5000/about
+
+---
+
+## Execution Summary:
+
+* Folder created → File written
+* Flask installed using terminal
+* App executed using python command
+* Output viewed in browser
+* Entire logic in single file (monolithic)
