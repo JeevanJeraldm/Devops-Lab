@@ -1,0 +1,93 @@
+Q6: Use kubectl commands to create, scale, and manage Kubernetes resources
+
+---
+
+## STEP 1: Start Kubernetes (Docker Desktop / Minikube)
+
+* Open Docker Desktop → Enable Kubernetes
+  OR
+* Start Minikube:
+  minikube start
+
+---
+
+## STEP 2: Open Terminal (PowerShell / Command Prompt)
+
+Open terminal where kubectl is installed
+
+Check:
+kubectl version
+
+---
+
+## STEP 3: Create a Pod
+
+kubectl run mypod --image=nginx
+
+---
+
+## STEP 4: View Pods
+
+kubectl get pods
+
+---
+
+## STEP 5: Create a Deployment
+
+kubectl create deployment myapp --image=nginx
+
+---
+
+## STEP 6: View Deployments
+
+kubectl get deployments
+
+---
+
+## STEP 7: Scale Deployment
+
+kubectl scale deployment myapp --replicas=3
+
+---
+
+## STEP 8: Expose Deployment (Service)
+
+kubectl expose deployment myapp --type=NodePort --port=80
+
+---
+
+## STEP 9: Get Services
+
+kubectl get services
+
+---
+
+## STEP 10: Describe Resources
+
+kubectl describe pod mypod
+kubectl describe deployment myapp
+
+---
+
+## STEP 11: Access Application
+
+If using Minikube:
+minikube service myapp
+
+---
+
+## STEP 12: Delete Resources
+
+kubectl delete pod mypod
+kubectl delete deployment myapp
+
+---
+
+## Execution Summary:
+
+* Kubernetes started locally
+* Pod created using kubectl run
+* Deployment created and scaled
+* Service exposed using NodePort
+* Resources viewed and described
+* Resources deleted after use
