@@ -1,0 +1,137 @@
+Ansible Integration with Kubernetes Cluster
+
+Step 1: Start Kubernetes Cluster (Terminal)
+
+Run:
+
+minikube start --driver=docker
+
+Verify cluster:
+
+kubectl get nodes
+
+Ensure status shows Ready
+
+Step 2: Install Ansible (WSL Ubuntu / Linux Terminal)
+
+Run:
+
+sudo apt update
+sudo apt install -y ansible
+
+Verify:
+
+ansible --version
+
+Step 3: Install Kubernetes Collection for Ansible
+
+Run:
+
+ansible-galaxy collection install community.kubernetes
+
+Step 4: Verify Kubernetes Connection
+
+Run:
+
+kubectl config view
+kubectl get pods
+
+Step 5: Create Test Playbook (test-k8s.yaml)
+
+Create file:
+
+test-k8s.yaml
+
+Paste:
+
+---
+
+* name: Test Kubernetes Connection
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+  * name: List all pods in default namespace
+    community.kubernetes.k8s_info:
+    kind: Pod
+    register: pod_list
+
+  * debug:
+    var: pod_list.resources
+
+Step 6: Run Test Playbook
+
+Run:
+
+ansible-playbook test-k8s.yaml
+
+Output shows list of pods
+
+Step 7: Create Kubernetes Info Playbook (get-k8s-info.yaml)
+
+Create file:
+
+get-k8s-info.yaml
+
+Paste:
+
+---
+
+* name: Gather Kubernetes Information
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+  * name: Get all namespaces
+    community.kubernetes.k8s_info:
+    kind: Namespace
+    register: ns_info
+
+  * debug:
+    var: ns_info.resources
+
+  * name: Get all nodes
+    community.kubernetes.k8s_info:
+    kind: Node
+    register: node_info
+
+  * debug:
+    var: node_info.resources
+
+Step 8: Run Info Playbook
+
+Run:
+
+ansible-playbook get-k8s-info.yaml
+
+Output shows namespaces and nodes
+
+Step 9: Cleanup
+
+Delete namespace if created:
+
+kubectl delete namespace ansible-lab
+
+Stop cluster:
+
+minikube stop
+
+Delete cluster:
+
+minikube delete
+
+Execution Summary
+
+Minikube cluster started
+
+Ansible installed and configured
+
+Kubernetes collection installed
+
+Playbooks created and executed
+
+Cluster information retrieved using Ansible
