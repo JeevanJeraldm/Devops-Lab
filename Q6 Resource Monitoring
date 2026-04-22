@@ -1,0 +1,115 @@
+# Experiment 6: Resource Monitoring – Managed Instance Group with Autoscaling
+
+## Aim
+To create an instance template and deploy a Managed Instance Group (MIG) with autoscaling triggered at 60% CPU utilization.
+
+---
+
+## Step 0: Initial Setup
+1. Open Google Cloud Console
+2. Select the correct Project
+3. Ensure billing is enabled
+
+---
+
+## Step 1: Create Instance Template
+
+1. Navigate to:
+   Compute Engine → Instance Templates → Create Instance Template
+
+2. Enter configuration:
+   - Name: web-template
+   - Machine type: e2-micro
+
+3. Allow HTTP traffic:
+   - Enable: "Allow HTTP traffic"
+
+4. Go to:
+   Management → Automation → Startup Script
+
+5. Paste the script:
+
+```bash
+#! /bin/bash
+apt-get update -y
+apt-get install -y apache2
+systemctl start apache2
+systemctl enable apache2
+Click "Create"
+
+Step 2: Create Managed Instance Group (MIG)
+Navigate to:
+Compute Engine → Instance Groups → Create Instance Group
+Enter:
+Name: web-mig
+Instance template: web-template
+Location: Single zone
+Zone: us-central1-a
+Set instance limits:
+Minimum number of instances: 1
+Maximum number of instances: 5
+
+Step 3: Configure Autoscaling
+Enable:
+Autoscaling: ON
+Set:
+Autoscaling metric: CPU utilization
+Target CPU utilization: 60%
+Click "Create"
+
+Step 4: Verify Instance Group
+Go to:
+Compute Engine → Instance Groups → web-mig
+Check:
+At least 1 instance is running
+Instance is created from template
+
+Step 5: Simulate Load (Optional but Recommended)
+Open VM instance from MIG
+Click "SSH"
+Run:
+sudo apt-get install -y stress
+stress --cpu 2 --timeout 120
+
+Step 6: Verify Autoscaling
+Go to:
+Compute Engine → Instance Groups → web-mig
+Open:
+Monitoring tab
+Observe:
+CPU usage increases
+Number of instances increases (scale out)
+After load stops:
+Instances decrease (scale in)
+----
+Shell commands
+# 1. Define Variables
+export TEMPLATE_NAME="web-template"
+export MIG_NAME="web-mig"
+export REGION="us-central1"
+export ZONE="us-central1-a"
+
+# 2. Create the Instance Template
+gcloud compute instance-templates create $TEMPLATE_NAME \
+    --machine-type=e2-micro \
+    --tags=http-server \
+    --metadata=startup-script='#! /bin/bash
+apt-get update
+apt-get install -y apache2 stress'
+
+# 3. Create the Managed Instance Group (MIG)
+gcloud compute instance-groups managed create $MIG_NAME \
+    --template=$TEMPLATE_NAME \
+    --size=1 \
+    --zone=$ZONE
+
+# 4. Set the Autoscaling Policy (60% CPU Target)
+gcloud compute instance-groups managed set-autoscaling $MIG_NAME \
+    --zone=$ZONE \
+    --max-num-replicas=5 \
+    --min-num-replicas=1 \
+    --target-cpu-utilization=0.60 \
+    --cool-down-period=60
+
+# 5. Verification
+gcloud compute instance-groups managed describe $MIG_NAME --zone=$ZONE
