@@ -1,0 +1,119 @@
+# Experiment 4: Implementing Cloud SQL (MySQL)
+
+## Aim
+To deploy a managed Cloud SQL (MySQL) instance and configure database settings for scalable and reliable data storage.
+
+---
+
+## Step 0: Initial Setup
+1. Open Google Cloud Console
+2. Select the correct Project
+3. Ensure billing is enabled
+
+---
+
+## Step 1: Open Cloud SQL
+1. Click Navigation Menu (☰)
+2. Go to:
+   SQL → Create Instance
+
+---
+
+## Step 2: Choose Database Engine
+1. Select:
+   - MySQL
+2. Click "Next"
+
+---
+
+## Step 3: Configure Instance
+Enter the following details:
+
+- Instance ID: my-sql-instance
+- Root password: (enter a strong password)
+- Region: us-central1
+- Zone: Single zone
+- Machine type: Lightweight (1 vCPU, 3.75 GB)
+
+Click "Continue"
+
+---
+
+## Step 4: Configure Storage
+Set:
+
+- Storage type: SSD
+- Capacity: 10 GB
+- Enable automatic storage increase: ON
+
+Click "Create Instance"
+
+(Note: Instance creation may take a few minutes)
+
+---
+
+## Step 5: Create Database
+1. Open the created instance
+2. Go to "Databases" tab
+3. Click "Create Database"
+4. Enter:
+   - Name: testdb
+5. Click "Create"
+
+---
+
+## Step 6: Connect via Cloud Shell
+Run the following command:
+
+```bash
+gcloud sql connect my-sql-instance --user=root
+Enter the root password when prompted
+
+Step 7: Create Table
+
+Inside MySQL prompt, run:
+
+CREATE DATABASE testdb;
+USE testdb;
+CREATE TABLE users (
+  id INT,
+  name VARCHAR(50)
+);
+
+Step 8: Verification
+Go to Cloud SQL → Instance → Databases
+Open:
+testdb
+Verify table:
+users
+----
+Shell commands:
+# 1. Define Variables
+export INSTANCE_NAME="my-sql-instance"
+export REGION="us-central1"
+export DB_NAME="testdb"
+
+# 2. Create the Cloud SQL Instance
+# Using e2-micro equivalent (db-f1-micro) to save credits/cost
+gcloud sql instances create $INSTANCE_NAME \
+    --database-version=MYSQL_8_0 \
+    --cpu=1 \
+    --memory=3840MiB \
+    --region=$REGION \
+    --root-password="YourStrongPassword123" \
+    --storage-type=SSD \
+    --storage-size=10GB \
+    --enable-storage-autosize
+
+# 3. Create the Database inside the instance
+gcloud sql databases create $DB_NAME --instance=$INSTANCE_NAME
+
+# 4. Initialize Table via SQL Query
+# This uses the non-interactive execution mode to create the table
+gcloud sql query execute $INSTANCE_NAME \
+    --database=$DB_NAME \
+    --query="CREATE TABLE users (id INT, name VARCHAR(50));"
+
+# 5. Final Verification
+gcloud sql instances describe $INSTANCE_NAME
+----
