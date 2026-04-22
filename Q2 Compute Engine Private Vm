@@ -1,0 +1,104 @@
+# Experiment 2: Creating Compute Engine Virtual Machine (Private VM)
+
+## Aim
+To launch a Compute Engine virtual machine without an external IP address and enable Private Google Access for secure connectivity.
+
+---
+
+## Step 0: Initial Setup
+1. Open Google Cloud Console
+2. Select the correct Project
+3. Ensure your previously created VPC and subnet are available
+
+---
+
+## Step 1: Open Compute Engine
+1. Click Navigation Menu (☰)
+2. Go to:
+   Compute Engine → VM Instances
+3. Click "Create Instance"
+
+---
+
+## Step 2: Configure VM
+Enter the following details:
+- Name: private-vm
+- Region: us-central1
+- Machine type: e2-micro
+
+Leave other settings as default
+
+---
+
+## Step 3: Disable External IP
+1. Go to "Networking" tab
+2. Under Network interfaces:
+   - External IPv4 address: None
+
+(This ensures the VM is private and not accessible from the internet)
+
+---
+
+## Step 4: Create VM
+1. Click "Create"
+2. Wait for the VM to be launched
+
+---
+
+## Step 5: Enable Private Google Access
+1. Go to:
+   VPC Network → Subnets
+2. Select the subnet used (e.g., subnet-us)
+3. Click "Edit"
+4. Enable:
+   - Private Google Access: ON
+5. Click "Save"
+
+---
+
+## Step 6: Verification
+1. Go to:
+   Compute Engine → VM Instances
+2. Check:
+   - VM has NO external IP
+   - Only internal IP is present
+
+3. Go to:
+   VPC Network → Subnets
+4. Verify:
+   - Private Google Access: ON
+
+---
+Shell commands:
+# Set environment variables
+export VM_NAME="private-vm"
+export REGION="us-central1"
+export ZONE="us-central1-a"
+export SUBNET="default"
+
+# 1. Create the VM with no external IP
+gcloud compute instances create $VM_NAME \
+    --zone=$ZONE \
+    --machine-type=e2-micro \
+    --no-address
+
+# 2. Enable Private Google Access on the subnet
+gcloud compute networks subnets update $SUBNET \
+    --region=$REGION \
+    --enable-private-ip-google-access
+
+# 3. Final Verification
+gcloud compute instances list --filter="name:$VM_NAME"
+----
+## Observations
+- VM created with only an internal IP address
+- External IP is disabled for security
+- Private Google Access is enabled on the subnet
+- VM can access Google APIs without internet exposure
+
+---
+
+## Result
+Successfully launched a Compute Engine VM (private-vm) without an external IP address and enabled Private Google Access, ensuring secure connectivity to Google services.
+
+---
