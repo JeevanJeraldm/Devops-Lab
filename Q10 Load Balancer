@@ -1,0 +1,194 @@
+# Experiment 10: HTTP(S) Load Balancer with Cloud Armor
+
+## Aim
+To deploy an HTTP(S) Load Balancer and configure a Cloud Armor security policy to protect backend services from unauthorized access.
+
+---
+
+## Step 0: Initial Setup
+1. Open Google Cloud Console
+2. Select the correct Project
+3. Ensure billing is enabled
+
+---
+
+## Step 1: Create Instance Template
+
+1. Navigate to:
+   Compute Engine → Instance Templates → Create Instance Template
+
+2. Enter:
+   - Name: lb-template
+   - Machine type: e2-micro
+
+3. Enable:
+   - Allow HTTP traffic
+
+4. Go to:
+   Management → Automation → Startup Script
+
+5. Paste:
+
+```bash
+#! /bin/bash
+apt-get update -y
+apt-get install -y apache2
+systemctl start apache2
+systemctl enable apache2
+Click "Create"
+
+Step 2: Create Managed Instance Group (MIG)
+Navigate to:
+Compute Engine → Instance Groups → Create Instance Group
+Enter:
+Name: lb-mig
+Instance template: lb-template
+Location: Single zone
+Zone: us-central1-a
+Set:
+Minimum instances: 2
+Click "Create"
+
+Step 3: Create Health Check
+Navigate to:
+Compute Engine → Health Checks → Create Health Check
+Enter:
+Name: http-health-check
+Protocol: HTTP
+Port: 80
+Click "Create"
+
+Step 4: Create HTTP Load Balancer
+Navigate to:
+Network Services → Load Balancing → Create Load Balancer
+Select:
+HTTP(S) Load Balancing
+Internet-facing
+Click "Start Configuration"
+
+Step 5: Configure Backend Service
+Backend name:
+web-backend
+Add Backend:
+Instance Group: lb-mig
+Port: 80
+Attach Health Check:
+http-health-check
+Click "Done"
+
+Step 6: Configure Frontend
+Set:
+Protocol: HTTP
+Port: 80
+IP: Ephemeral
+Click "Done"
+Click:
+"Create Load Balancer"
+
+Step 7: Create Cloud Armor Policy
+Navigate to:
+Network Security → Cloud Armor → Create Policy
+Enter:
+Name: block-policy
+Default rule: Allow
+Add Rule:
+Action: Deny (403)
+Source IP: YOUR_IP_TO_BLOCK
+Priority: 1000
+Click:
+"Create"
+
+Step 8: Attach Policy to Backend
+Navigate to:
+Load Balancing → Backend Services
+Select:
+web-backend
+Click:
+"Edit"
+Set:
+Cloud Armor policy: block-policy
+Click:
+"Update"
+
+Step 9: Test Load Balancer
+Get Load Balancer IP
+Open browser:
+http://LOAD_BALANCER_IP
+
+✔ Expected:
+
+Apache page loads (allowed access)
+
+Step 10: Test Security Policy
+Access from blocked IP
+
+✔ Expected:
+
+HTTP 403 Forbidden
+
+----Shell commands
+# 1. Setup Variables
+export TEMPLATE_NAME="lb-template"
+export MIG_NAME="lb-mig"
+export REGION="us-central1"
+export ZONE="us-central1-a"
+export HEALTH_CHECK="http-health-check"
+export BACKEND_SERVICE="web-backend"
+export SECURITY_POLICY="block-policy"
+export BLOCKED_IP="1.2.3.4" # Replace with an actual IP to test blocking
+
+# 2. Create Instance Template & Managed Instance Group (MIG)
+gcloud compute instance-templates create $TEMPLATE_NAME \
+    --machine-type=e2-micro \
+    --tags=http-server \
+    --metadata=startup-script='#! /bin/bash
+    apt-get update && apt-get install -y apache2
+    echo "Welcome to the Load Balanced Server" > /var/www/html/index.html'
+
+gcloud compute instance-groups managed create $MIG_NAME \
+    --template=$TEMPLATE_NAME \
+    --size=2 \
+    --zone=$ZONE
+
+# 3. Create Health Check & Backend Service
+gcloud compute health-checks create http $HEALTH_CHECK --port 80
+
+gcloud compute backend-services create $BACKEND_SERVICE \
+    --protocol=HTTP \
+    --health-checks=$HEALTH_CHECK \
+    --global
+
+gcloud compute backend-services add-backend $BACKEND_SERVICE \
+    --instance-group=$MIG_NAME \
+    --instance-group-zone=$ZONE \
+    --global
+
+# 4. Create URL Map, Target Proxy, and Forwarding Rule (Frontend)
+gcloud compute url-maps create web-map --default-service=$BACKEND_SERVICE
+
+gcloud compute target-http-proxies create http-proxy --url-map=web-map
+
+gcloud compute forwarding-rules create http-content-rule \
+    --load-balancing-scheme=EXTERNAL \
+    --address-region=global \
+    --target-http-proxy=http-proxy \
+    --ports=80
+
+# 5. Create Cloud Armor Policy and Rules
+gcloud compute security-policies create $SECURITY_POLICY \
+    --description="Block specific IP and allow others"
+
+gcloud compute security-policies rules create 1000 \
+    --security-policy=$SECURITY_POLICY \
+    --expression="inIpRange(origin.ip, '$BLOCKED_IP')" \
+    --action="deny-403" \
+    --description="Deny access to specific IP"
+
+# 6. Attach Policy to Backend Service
+gcloud compute backend-services update $BACKEND_SERVICE \
+    --security-policy=$SECURITY_POLICY \
+    --global
+
+# 7. Verification - Get the Load Balancer IP
+echo "Wait a few minutes for the Load Balancer to initialize..."
+gcloud compute forwarding-rules describe http-content-rule --global --format="value(IPAddress)"
