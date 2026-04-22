@@ -1,0 +1,111 @@
+# Experiment 5: Cloud Monitoring with Startup Script
+
+## Aim
+To launch a Compute Engine virtual machine and automate Apache installation using a startup script, then monitor it using Cloud Monitoring.
+
+---
+
+## Step 0: Initial Setup
+1. Open Google Cloud Console
+2. Select the correct Project
+3. Ensure billing is enabled
+
+---
+
+## Step 1: Create VM with Startup Script
+
+1. Navigate to:
+   Compute Engine → VM Instances → Create Instance
+
+2. Enter the following configuration:
+   - Name: monitoring-vm
+   - Region: us-central1
+   - Machine type: e2-micro (recommended)
+
+3. Allow HTTP traffic:
+   - Check: "Allow HTTP traffic"
+
+4. Go to:
+   Management → Automation → Startup Script
+
+5. Paste the following script:
+
+```bash
+#! /bin/bash
+apt-get update -y
+apt-get install -y apache2
+systemctl start apache2
+systemctl enable apache2
+echo "<h1>Apache Server Running</h1>" > /var/www/html/index.html
+Click "Create"
+
+Step 2: Verify Apache Installation
+After VM is created, copy the External IP:
+Compute Engine → VM Instances → monitoring-vm
+Open browser and enter:
+http://EXTERNAL_IP
+Expected Output:
+Apache page OR "Apache Server Running" message
+
+Step 3: Enable Cloud Monitoring
+Navigate to:
+Monitoring → Overview
+If prompted:
+Click "Set up monitoring"
+Workspace will be created automatically
+
+Step 4: View Metrics
+Go to:
+Monitoring → Metrics Explorer
+Configure:
+Resource type: VM Instance
+Metric: CPU → Utilization
+Click "Apply"
+Expected Output:
+Graph showing CPU usage
+
+Step 5: Create Uptime Check
+Navigate to:
+Monitoring → Uptime Checks
+Click:
+"Create Uptime Check"
+Configure:
+Name: apache-check
+Protocol: HTTP
+Resource Type: URL
+Hostname: EXTERNAL_IP
+Path: /
+Check frequency: 1 minute
+Click "Create"
+
+Step 6: Verify Uptime Check
+Go to:
+Monitoring → Uptime Checks
+Check:
+Status should be "UP" (green)
+
+Shell commands:
+# 1. Define Variables
+export VM_NAME="monitoring-vm"
+export ZONE="us-central1-a"
+
+# 2. Create VM with Startup Script and HTTP access
+gcloud compute instances create $VM_NAME \
+    --zone=$ZONE \
+    --machine-type=e2-micro \
+    --tags=http-server \
+    --metadata=startup-script='#! /bin/bash
+apt-get update
+apt-get install -y apache2
+systemctl start apache2
+systemctl enable apache2'
+
+# 3. Create a Firewall Rule to allow HTTP traffic
+gcloud compute firewall-rules create allow-http \
+    --action=ALLOW \
+    --rules=tcp:80 \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=http-server
+
+# 4. Get External IP for Verification
+gcloud compute instances list --filter="name:$VM_NAME" --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
